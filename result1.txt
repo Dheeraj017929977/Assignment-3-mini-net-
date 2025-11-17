@@ -1,18 +1,42 @@
-================================================================
+============================================================
 Experiment 1: IP Routing - Ping Test Results
-================================================================
+============================================================
 
-This file will be populated when you run: sudo python3 exp1.py
+1. Ping from h1 to h3 (10.0.2.2):
+------------------------------------------------------------
+PING 10.0.2.2 (10.0.2.2) 56(84) bytes of data.
+64 bytes from 10.0.2.2: icmp_seq=1 ttl=62 time=0.080 ms
 
-The script will automatically:
-1. Create the network topology with hosts h1, h2, h3 and routers r1, r2
-2. Configure routing tables
-3. Run ping tests and save results here
-
-Expected ping tests:
-- from h1 to h3 (10.0.2.2)
-- from h2 to h3 (10.0.2.2)
-- from h3 to h1 (10.0.0.1)
-- from h3 to h2 (10.0.3.2)
+--- 10.0.2.2 ping statistics ---
+1 packets transmitted, 1 received, 0% packet loss, time 0ms
+rtt min/avg/max/mdev = 0.080/0.080/0.080/0.000 ms
 
 
+2. Ping from h2 to h3 (10.0.2.2):
+------------------------------------------------------------
+PING 10.0.2.2 (10.0.2.2) 56(84) bytes of data.
+64 bytes from 10.0.2.2: icmp_seq=1 ttl=62 time=0.045 ms
+
+--- 10.0.2.2 ping statistics ---
+1 packets transmitted, 1 received, 0% packet loss, time 0ms
+rtt min/avg/max/mdev = 0.045/0.045/0.045/0.000 ms
+
+
+3. Ping from h3 to h1 (10.0.0.1):
+------------------------------------------------------------
+PING 10.0.0.1 (10.0.0.1) 56(84) bytes of data.
+64 bytes from 10.0.0.1: icmp_seq=1 ttl=62 time=0.009 ms
+
+--- 10.0.0.1 ping statistics ---
+1 packets transmitted, 1 received, 0% packet loss, time 0ms
+rtt min/avg/max/mdev = 0.009/0.009/0.009/0.000 ms
+
+
+4. Ping from h3 to h2 (10.0.3.2):
+------------------------------------------------------------
+PING 10.0.3.2 (10.0.3.2) 56(84) bytes of data.
+64 bytes from 10.0.3.2: icmp_seq=1 ttl=62 time=0.009 ms
+
+--- 10.0.3.2 ping statistics ---
+1 packets transmitted, 1 received, 0% packet loss, time 0ms
+rtt min/avg/max/mdev = 0.009/0.009/0.009/0.000 ms

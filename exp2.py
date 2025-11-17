@@ -23,6 +23,7 @@ from mininet.node import OVSKernelSwitch
 from mininet.link import TCLink
 from mininet.log import setLogLevel, info
 import os
+import time
 
 
 def section(fh, title, data):
@@ -52,17 +53,22 @@ def main():
     info("*** Starting Mininet\n")
     net.start()
 
-    # Optional breakpoint for manual experimentation
-    if os.environ.get("HOLD") == "1":
-        input(
-            "\n[Experiment 2] Network is live. "
-            "Run ovs-ofctl commands in another terminal if you want.\n"
-            "Press ENTER here to continue with the automated steps...\n"
-        )
-
     with open("result2.txt", "w") as out:
         out.write("Experiment 2: SDN (Layer 2) log\n")
 
+        # Pause to allow running ovs-ofctl commands from another terminal window
+        # as specified in the assignment requirements
+        info("\n*** Network is running. You can now run the following commands\n")
+        info("    from ANOTHER TERMINAL WINDOW:\n")
+        info("    $ sudo ovs-ofctl -O OpenFlow13 show s1\n")
+        info("    $ sudo ovs-ofctl -O OpenFlow13 dump-flows s1\n")
+        info(
+            "\n*** Waiting 5 seconds... (or run commands manually from another terminal)\n"
+        )
+        time.sleep(5)  # Give user time to run commands from another terminal
+
+        # Capture the commands automatically (they will also work from another terminal)
+        info("*** Capturing ovs-ofctl show and dump-flows output...\n")
         section(
             out, "ovs-ofctl show s1 (before)", s1.cmd("ovs-ofctl -O OpenFlow13 show s1")
         )

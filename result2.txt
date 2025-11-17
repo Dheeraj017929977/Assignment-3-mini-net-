@@ -1,23 +1,71 @@
-================================================================
-Experiment 2: SDN (L2) - Results
-================================================================
+Experiment 2: SDN (Layer 2) log
 
-This file will be populated when you run: sudo python3 exp2.py
+=== ovs-ofctl show s1 (before) ===
+OFPT_FEATURES_REPLY (OF1.3) (xid=0x2): dpid:0000000000000001
+n_tables:254, n_buffers:0
+capabilities: FLOW_STATS TABLE_STATS PORT_STATS GROUP_STATS QUEUE_STATS
+OFPST_PORT_DESC reply (OF1.3) (xid=0x3):
+ 1(s1-eth1): addr:ee:b1:4e:ad:74:1f
+     config:     0
+     state:      LIVE
+     current:    10GB-FD COPPER
+     speed: 10000 Mbps now, 0 Mbps max
+ 2(s1-eth2): addr:3e:b6:24:be:f9:cf
+     config:     0
+     state:      LIVE
+     current:    10GB-FD COPPER
+     speed: 10000 Mbps now, 0 Mbps max
+ 3(s1-eth3): addr:02:f3:27:12:32:f6
+     config:     0
+     state:      LIVE
+     current:    10GB-FD COPPER
+     speed: 10000 Mbps now, 0 Mbps max
+ LOCAL(s1): addr:02:2f:0a:b6:2d:4f
+     config:     PORT_DOWN
+     state:      LINK_DOWN
+     speed: 0 Mbps now, 0 Mbps max
+OFPT_GET_CONFIG_REPLY (OF1.3) (xid=0x9): frags=normal miss_send_len=0
 
-The script will automatically:
-1. Create the network topology with hosts h1, h2, h3 and switches s1, s2
-2. Run initial ping tests (before flow rules)
-3. Show switch s1 port state and flow table using ovs-ofctl
-4. Configure flow rules:
-   - Drop all flows from port s1-eth2
-   - Forward all flows from port s1-eth1 to s1-eth3
-5. Run final ping tests (after flow rules)
+=== ovs-ofctl dump-flows s1 (before) ===
+cookie=0x0, duration=0.039s, table=0, n_packets=0, n_bytes=0, priority=0 actions=NORMAL
 
-Expected content:
-- Initial ping tests: from h1 to h3, from h2 to h3
-- ovs-ofctl show s1 output
-- ovs-ofctl dump-flows s1 output (before and after flow rules)
-- Flow rule commands used
-- Final ping test: from h1 to h3
+=== Ping h1 → h3 (before) ===
+PING 10.0.0.3 (10.0.0.3) 56(84) bytes of data.
+64 bytes from 10.0.0.3: icmp_seq=1 ttl=64 time=0.598 ms
 
+--- 10.0.0.3 ping statistics ---
+1 packets transmitted, 1 received, 0% packet loss, time 0ms
+rtt min/avg/max/mdev = 0.598/0.598/0.598/0.000 ms
 
+=== Ping h2 → h3 (before) ===
+PING 10.0.0.3 (10.0.0.3) 56(84) bytes of data.
+64 bytes from 10.0.0.3: icmp_seq=1 ttl=64 time=0.480 ms
+
+--- 10.0.0.3 ping statistics ---
+1 packets transmitted, 1 received, 0% packet loss, time 0ms
+rtt min/avg/max/mdev = 0.480/0.480/0.480/0.000 ms
+
+=== Flow command: drop traffic from s1-eth2 ===
+ovs-ofctl -O OpenFlow13 add-flow s1 "in_port=2,actions=drop"
+
+=== Flow command: forward s1-eth1 → s1-eth3 ===
+ovs-ofctl -O OpenFlow13 add-flow s1 "in_port=1,actions=output:3"
+
+=== ovs-ofctl dump-flows s1 (after) ===
+cookie=0x0, duration=0.008s, table=0, n_packets=0, n_bytes=0, in_port="s1-eth2" actions=drop
+ cookie=0x0, duration=0.002s, table=0, n_packets=0, n_bytes=0, in_port="s1-eth1" actions=output:"s1-eth3"
+ cookie=0x0, duration=0.066s, table=0, n_packets=8, n_bytes=560, priority=0 actions=NORMAL
+
+=== Ping h1 → h3 (after) ===
+PING 10.0.0.3 (10.0.0.3) 56(84) bytes of data.
+64 bytes from 10.0.0.3: icmp_seq=1 ttl=64 time=0.025 ms
+
+--- 10.0.0.3 ping statistics ---
+1 packets transmitted, 1 received, 0% packet loss, time 0ms
+rtt min/avg/max/mdev = 0.025/0.025/0.025/0.000 ms
+
+=== Ping h2 → h3 (after) ===
+PING 10.0.0.3 (10.0.0.3) 56(84) bytes of data.
+
+--- 10.0.0.3 ping statistics ---
+1 packets transmitted, 0 received, 100% packet loss, time 0ms
