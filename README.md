@@ -17,34 +17,80 @@ This repository contains two Mininet experiments for IP Routing and SDN (L2) con
    ```
 3. Clone this repo and run the experiments:
    ```bash
-   git clone <repo-url>
+   git clone https://github.com/Dheeraj017929977/Assignment-3-mini-net-.git
    cd Assignment-3-mini-net-
    sudo python3 exp1.py
    sudo python3 exp2.py
    ```
 
-### macOS-only note
+---
 
-If you try to run Mininet directly on macOS you'll hit `ModuleNotFoundError: mininet`, `mnexec not found`, etc. The `pip install mininet` command only installs the Python helpers, not the kernel features. Use Docker or a Linux VM instead:
+## Linux Testing Guide
+
+### Step 1: Clone the Repository
 
 ```bash
-# 1. Install Docker Desktop (if not already installed)
-# Download from: https://www.docker.com/products/docker-desktop
+git clone https://github.com/Dheeraj017929977/Assignment-3-mini-net-.git
+cd Assignment-3-mini-net-
+```
 
-# 2. Run this command from the assignment directory:
-docker run -it --rm --privileged \
-  -v $(pwd):/workspace \
-  -w /workspace \
-  iwaseyusuke/mininet \
-  bash
+### Step 2: Install Mininet
 
-# 3. Inside the container, run:
+```bash
+# Update package list
+sudo apt update
+
+# Install dependencies
+sudo apt install -y git python3-pip
+
+# Clone and install Mininet
+git clone https://github.com/mininet/mininet
+cd mininet
+sudo ./util/install.sh -a
+cd ..
+```
+
+### Step 3: Verify Installation
+
+```bash
+sudo mn --test pingall
+```
+
+If you see successful pings, Mininet is installed correctly.
+
+### Step 4: Clean Up (Before Each Test)
+
+```bash
+sudo mn -c
+```
+
+### Step 5: Run Experiments
+
+**Run Experiment 1:**
+```bash
 sudo python3 exp1.py
-# or
+```
+Results are saved to `result1.txt`. Type `exit` in the Mininet CLI when done.
+
+**Run Experiment 2 (Automated):**
+```bash
 sudo python3 exp2.py
 ```
 
-See the [Installation](#installation-macos) section below for more options.
+**Run Experiment 2 (Manual Mode - Recommended):**
+```bash
+MANUAL=1 sudo python3 exp2.py
+```
+When the script pauses, open a **NEW terminal window** and run:
+```bash
+sudo ovs-ofctl -O OpenFlow13 show s1
+sudo ovs-ofctl -O OpenFlow13 dump-flows s1
+sudo ovs-ofctl -O OpenFlow13 add-flow s1 "in_port=2,actions=drop"
+sudo ovs-ofctl -O OpenFlow13 add-flow s1 "in_port=1,actions=output:3"
+```
+Then return to the first terminal and press ENTER. Results are saved to `result2.txt`.
+
+---
 
 ## Prerequisites
 
@@ -52,79 +98,6 @@ See the [Installation](#installation-macos) section below for more options.
 - Python 3
 - Open vSwitch (OVS) tools (for Experiment 2)
 - sudo privileges (required to run Mininet)
-
-## Installation (macOS)
-
-**Important:** Mininet is primarily designed for Linux. On macOS, you have several options:
-
-### Option 1: Docker (Recommended for macOS)
-
-This is the easiest way to run Mininet on macOS:
-
-1. **Install Docker Desktop for Mac** from [docker.com](https://www.docker.com/products/docker-desktop)
-
-2. **Pull the Mininet Docker image:**
-   ```bash
-   docker pull iwaseyusuke/mininet
-   ```
-
-3. **Run the experiments in Docker:**
-   ```bash
-   # Mount your assignment directory and run in the container
-   docker run -it --rm --privileged \
-     -v $(pwd):/workspace \
-     -w /workspace \
-     iwaseyusuke/mininet \
-     bash
-   ```
-
-4. **Inside the Docker container, run:**
-   ```bash
-   sudo python3 exp1.py
-   # or
-   sudo python3 exp2.py
-   ```
-
-### Option 2: Linux VM (Most Reliable)
-
-1. Install VirtualBox or VMware
-2. Download and install Ubuntu 20.04 or 22.04
-3. Install Mininet in the VM:
-   ```bash
-   git clone https://github.com/mininet/mininet
-   cd mininet
-   sudo ./util/install.sh -a
-   ```
-4. Copy your assignment files to the VM and run the scripts
-
-### Option 3: Homebrew (Not Available)
-
-Mininet is not available via Homebrew. Use Docker (Option 1) or a Linux VM (Option 2) instead.
-
-### Option 4: Install from Source (Advanced)
-
-If you want to install Mininet from source on macOS:
-
-```bash
-# Install dependencies
-brew install python3 git
-
-# Clone and install Mininet
-git clone https://github.com/mininet/mininet
-cd mininet
-sudo ./util/install.sh -a
-```
-
-**Note:** This may require additional system configuration and may not work perfectly on all macOS versions.
-
-### Verify Installation
-
-After installation, verify Mininet works:
-```bash
-sudo mn --test pingall
-```
-
-If this works, you're ready to run the experiments!
 
 ## How to Run
 
@@ -162,18 +135,25 @@ This experiment builds the L2 topology (two OVS switches, three hosts), captures
 sudo python3 exp2.py
 ```
 
-**Optional manual step (matches the assignment instructions):**
+**Manual mode (run commands from another terminal - matches assignment instructions):**
 ```bash
-HOLD=1 sudo python3 exp2.py   # script pauses after the topology boots
+MANUAL=1 sudo python3 exp2.py   # or use HOLD=1 (same effect)
 ```
-When the prompt appears you can open another terminal and run:
+When the script pauses, **open a NEW terminal window** and run these commands:
 ```bash
+# 1. Check port state of s1
 sudo ovs-ofctl -O OpenFlow13 show s1
+
+# 2. Check flow table (should be empty initially)
 sudo ovs-ofctl -O OpenFlow13 dump-flows s1
+
+# 3. Drop all traffic from port s1-eth2
 sudo ovs-ofctl -O OpenFlow13 add-flow s1 "in_port=2,actions=drop"
+
+# 4. Forward traffic from port s1-eth1 to s1-eth3
 sudo ovs-ofctl -O OpenFlow13 add-flow s1 "in_port=1,actions=output:3"
 ```
-Then press ENTER in the first terminal to let the script finish. The outputs (including the exact commands) are still written to `result2.txt`.
+Then go back to the first terminal and press ENTER to let the script finish. All commands and outputs (including the exact ovs-ofctl commands you used) are automatically documented in `result2.txt`.
 
 **What gets recorded automatically:**
 - Baseline ovs-ofctl show/dump outputs (before flows)
@@ -208,13 +188,13 @@ Then press ENTER in the first terminal to let the script finish. The outputs (in
 
 ## Troubleshooting
 
-- **`Cannot find required executable mnexec`**: This means the Python mininet package is installed, but the system binaries are missing. On macOS, use Docker (see Quick Start above) or a Linux VM. The `pip install mininet` command only installs the Python package, not the full Mininet system.
+- **`Cannot find required executable mnexec`**: This means the Python mininet package is installed, but the system binaries are missing. Reinstall Mininet: `cd mininet && sudo ./util/install.sh -a`
 
 - **Permission denied**: Make sure you're running with `sudo`
 
-- **Mininet not found / ModuleNotFoundError**: On macOS, use Docker or a Linux VM. Mininet requires Linux kernel features that aren't available on macOS.
+- **Mininet not found / ModuleNotFoundError**: Ensure Mininet is properly installed on Linux. The `pip install mininet` command only installs the Python package, not the full Mininet system.
 
-- **OVS commands fail**: Ensure Open vSwitch is installed and running (included in Docker image)
+- **OVS commands fail**: Ensure Open vSwitch is installed and running: `sudo apt install -y openvswitch-switch openvswitch-common`
 
 - **Network cleanup**: If a previous run didn't clean up properly, you may need to run `sudo mn -c` to clean up Mininet
 

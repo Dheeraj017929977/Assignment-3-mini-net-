@@ -57,43 +57,96 @@ def build_network():
 def run_experiment():
     net, (h1, h2, h3), (s1, _s2) = build_network()
 
-    # Optional pause so the student can run ovs-ofctl manually (per instructions)
-    if os.environ.get("HOLD") == "1":
-        input(
-            "\n[Experiment 2] Network is ready. In another terminal run:\n"
-            "  sudo ovs-ofctl -O OpenFlow13 show s1\n"
-            "  sudo ovs-ofctl -O OpenFlow13 dump-flows s1\n"
-            '  sudo ovs-ofctl -O OpenFlow13 add-flow s1 "in_port=2,actions=drop"\n'
-            '  sudo ovs-ofctl -O OpenFlow13 add-flow s1 "in_port=1,actions=output:3"\n'
-            "Press ENTER here when finished to let the script continue.\n"
-        )
+    # Flow rule commands that will be documented and executed
+    show_cmd = "sudo ovs-ofctl -O OpenFlow13 show s1"
+    dump_flows_cmd = "sudo ovs-ofctl -O OpenFlow13 dump-flows s1"
+    drop_cmd = 'sudo ovs-ofctl -O OpenFlow13 add-flow s1 "in_port=2,actions=drop"'
+    fwd_cmd = 'sudo ovs-ofctl -O OpenFlow13 add-flow s1 "in_port=1,actions=output:3"'
 
     with open("result2.txt", "w") as out:
         out.write("Experiment 2: SDN (Layer 2) results\n")
+        out.write("=" * 70 + "\n\n")
+
+        # Instructions for manual testing from another terminal
+        out.write("INSTRUCTIONS: Manual Testing from Another Terminal Window\n")
+        out.write("-" * 70 + "\n")
+        out.write(
+            "While exp2.py is running, open a NEW terminal window and execute:\n\n"
+        )
+        out.write(f"1. Check port state of s1:\n")
+        out.write(f"   {show_cmd}\n\n")
+        out.write(f"2. Check flow table (should be empty initially):\n")
+        out.write(f"   {dump_flows_cmd}\n\n")
+        out.write(f"3. Drop all flows from port s1-eth2:\n")
+        out.write(f"   {drop_cmd}\n\n")
+        out.write(f"4. Forward flows from port s1-eth1 to s1-eth3:\n")
+        out.write(f"   {fwd_cmd}\n\n")
+        out.write("=" * 70 + "\n\n")
 
         # Baseline ovs-ofctl info
+        info("*** Capturing baseline state of s1\n")
         section(
             out, "ovs-ofctl show s1 (before)", s1.cmd("ovs-ofctl -O OpenFlow13 show s1")
         )
         section(
             out,
-            "ovs-ofctl dump-flows s1 (before)",
+            "ovs-ofctl dump-flows s1 (before) - should be empty",
             s1.cmd("ovs-ofctl -O OpenFlow13 dump-flows s1"),
         )
 
         # Baseline pings
-        section(out, "Ping h1 -> h3 (before)", h1.cmd(f"ping -c 1 {h3.IP()}"))
-        section(out, "Ping h2 -> h3 (before)", h2.cmd(f"ping -c 1 {h3.IP()}"))
+        info("*** Running baseline ping tests\n")
+        section(
+            out, "Ping h1 -> h3 (before flow rules)", h1.cmd(f"ping -c 1 {h3.IP()}")
+        )
+        section(
+            out, "Ping h2 -> h3 (before flow rules)", h2.cmd(f"ping -c 1 {h3.IP()}")
+        )
 
-        # Required flow rules
-        drop_cmd = 'ovs-ofctl -O OpenFlow13 add-flow s1 "in_port=2,actions=drop"'
-        fwd_cmd = 'ovs-ofctl -O OpenFlow13 add-flow s1 "in_port=1,actions=output:3"'
+        # Document the commands that will be used
+        out.write("\n" + "=" * 70 + "\n")
+        out.write("FLOW RULE COMMANDS USED\n")
+        out.write("=" * 70 + "\n\n")
+        out.write("These commands were executed (manually or automatically):\n\n")
+        out.write(f"Command 1 - Drop traffic from s1-eth2 (port 2):\n")
+        out.write(f"  {drop_cmd}\n\n")
+        out.write(
+            f"Command 2 - Forward traffic from s1-eth1 (port 1) to s1-eth3 (port 3):\n"
+        )
+        out.write(f"  {fwd_cmd}\n\n")
+        out.write("=" * 70 + "\n\n")
 
-        section(out, "Flow command (drop traffic from s1-eth2)", drop_cmd)
-        section(out, "Flow command (forward s1-eth1 -> s1-eth3)", fwd_cmd)
+        # Optional pause for manual execution
+        # Supports both MANUAL=1 and HOLD=1 for compatibility
+        manual_mode = os.environ.get("MANUAL", os.environ.get("HOLD", "")).lower() in (
+            "1",
+            "true",
+            "yes",
+        )
 
-        s1.cmd(drop_cmd)
-        s1.cmd(fwd_cmd)
+        if manual_mode:
+            info("\n" + "=" * 70 + "\n")
+            info("*** MANUAL MODE: Run commands from another terminal window\n")
+            info("=" * 70 + "\n")
+            info(
+                "The network is now running. Open a NEW terminal window and execute:\n\n"
+            )
+            info(f"  {show_cmd}\n")
+            info(f"  {dump_flows_cmd}\n")
+            info(f"  {drop_cmd}\n")
+            info(f"  {fwd_cmd}\n\n")
+            info(
+                "After running these commands, come back to this terminal and press ENTER.\n"
+            )
+            info("=" * 70 + "\n\n")
+            input(
+                "Press ENTER after you have run the ovs-ofctl commands in another terminal...\n"
+            )
+        else:
+            info("*** Installing flow rules automatically\n")
+            # Install flow rules automatically
+            s1.cmd(drop_cmd.replace("sudo ", ""))
+            s1.cmd(fwd_cmd.replace("sudo ", ""))
 
         # Show flows after programming
         section(
