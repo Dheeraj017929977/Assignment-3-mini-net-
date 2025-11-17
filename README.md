@@ -2,65 +2,112 @@
 
 This repository contains two Mininet experiments for IP Routing and SDN (L2) configurations.
 
-## Installation on Ubuntu
+## Quick Start
 
-### Step 1: Install Ubuntu
+**If you're getting `ModuleNotFoundError: No module named 'mininet'` or `Cannot find required executable mnexec`:**
 
-1. **Download Ubuntu:** Get the latest Ubuntu LTS ISO (22.04 recommended) from [ubuntu.com/download](https://ubuntu.com/download)
-
-2. **Install Ubuntu:**
-   - **Bare metal installation:**
-     - Create a bootable USB using Rufus (Windows) or `dd`/BalenaEtcher (macOS/Linux)
-     - Boot from the USB, choose *Install Ubuntu*, and follow the prompts (language, keyboard, disk selection, user creation)
-   
-   - **Virtual machine installation:**
-     - Install VirtualBox or VMware
-     - Create a new VM with at least 2 vCPUs, 4 GB RAM, and 20 GB disk space
-     - Attach the Ubuntu ISO to the VM, boot it, and complete the installation
-
-3. **Update Ubuntu after installation:**
-   ```bash
-   sudo apt update && sudo apt upgrade -y
-   sudo reboot
-   ```
-
-### Step 2: Install Mininet and Dependencies
-
-Open a terminal and run:
+The `pip install mininet` command only installs the Python package, but Mininet also requires system binaries (like `mnexec`) that need Linux kernel features. On macOS, the easiest solution is to use **Docker**:
 
 ```bash
-sudo apt update
-sudo apt install -y mininet openvswitch-switch python3 python3-pip git
+# 1. Install Docker Desktop (if not already installed)
+# Download from: https://www.docker.com/products/docker-desktop
+
+# 2. Run this command from the assignment directory:
+docker run -it --rm --privileged \
+  -v $(pwd):/workspace \
+  -w /workspace \
+  iwaseyusuke/mininet \
+  bash
+
+# 3. Inside the container, run:
+sudo python3 exp1.py
+# or
+sudo python3 exp2.py
 ```
 
-**Optional - Install from source (if apt package doesn't work):**
+See the [Installation](#installation-macos) section below for more options.
+
+## Prerequisites
+
+- Mininet installed on your system
+- Python 3
+- Open vSwitch (OVS) tools (for Experiment 2)
+- sudo privileges (required to run Mininet)
+
+## Installation (macOS)
+
+**Important:** Mininet is primarily designed for Linux. On macOS, you have several options:
+
+### Option 1: Docker (Recommended for macOS)
+
+This is the easiest way to run Mininet on macOS:
+
+1. **Install Docker Desktop for Mac** from [docker.com](https://www.docker.com/products/docker-desktop)
+
+2. **Pull the Mininet Docker image:**
+   ```bash
+   docker pull iwaseyusuke/mininet
+   ```
+
+3. **Run the experiments in Docker:**
+   ```bash
+   # Mount your assignment directory and run in the container
+   docker run -it --rm --privileged \
+     -v $(pwd):/workspace \
+     -w /workspace \
+     iwaseyusuke/mininet \
+     bash
+   ```
+
+4. **Inside the Docker container, run:**
+   ```bash
+   sudo python3 exp1.py
+   # or
+   sudo python3 exp2.py
+   ```
+
+### Option 2: Linux VM (Most Reliable)
+
+1. Install VirtualBox or VMware
+2. Download and install Ubuntu 20.04 or 22.04
+3. Install Mininet in the VM:
+   ```bash
+   git clone https://github.com/mininet/mininet
+   cd mininet
+   sudo ./util/install.sh -a
+   ```
+4. Copy your assignment files to the VM and run the scripts
+
+### Option 3: Homebrew (Not Available)
+
+Mininet is not available via Homebrew. Use Docker (Option 1) or a Linux VM (Option 2) instead.
+
+### Option 4: Install from Source (Advanced)
+
+If you want to install Mininet from source on macOS:
+
 ```bash
+# Install dependencies
+brew install python3 git
+
+# Clone and install Mininet
 git clone https://github.com/mininet/mininet
 cd mininet
 sudo ./util/install.sh -a
 ```
 
-### Step 3: Verify Installation
+**Note:** This may require additional system configuration and may not work perfectly on all macOS versions.
 
-Test that Mininet is working correctly:
+### Verify Installation
 
+After installation, verify Mininet works:
 ```bash
 sudo mn --test pingall
 ```
 
-If this command runs without errors, Mininet is installed correctly!
+If this works, you're ready to run the experiments!
 
-### Step 4: Get This Repository
-
-Clone or download this repository:
-
-```bash
-cd ~
-git clone <repository-url>
-cd Assignment-3-mini-net-
-```
-
-## How to Run the Experiments
+## How to Run
 
 ### Experiment 1: IP Routing
 
@@ -69,11 +116,6 @@ This experiment creates a network topology with hosts and routers, configures ro
 **To run:**
 ```bash
 sudo python3 exp1.py
-```
-
-Or use the shell script:
-```bash
-sudo bash run_exp1.sh
 ```
 
 **What it does:**
@@ -88,65 +130,38 @@ sudo bash run_exp1.sh
 5. Saves all ping results to `result1.txt`
 6. Opens Mininet CLI for manual testing (type `exit` to stop)
 
-**Note:** The script automatically populates `result1.txt` with ping test results.
+**Note:** The script will automatically populate `result1.txt` with ping test results.
 
 ---
 
 ### Experiment 2: SDN (L2)
 
-This experiment creates a network topology with hosts and OpenFlow switches, uses `ovs-ofctl` to check switch states and configure flow rules, and tests connectivity.
-
-**Assignment Requirements:**
-- Show ping results from h1 to h3 and from h2 to h3 in `result2.txt`
-- Check port state and flow table of s1 using `ovs-ofctl show s1` and `ovs-ofctl dump-flows s1`
-- Use `ovs-ofctl add-flow` to drop all flows from port s1-eth2
-- Use `ovs-ofctl add-flow` to forward all flows from port s1-eth1 to s1-eth3
-- Show all commands used in `result2.txt`
-- Show ping results again after flow rules are applied
+This experiment creates a network topology with hosts and OpenFlow switches, configures flow rules using `ovs-ofctl`, and tests connectivity.
 
 **To run:**
 ```bash
 sudo python3 exp2.py
 ```
 
-Or use the shell script:
-```bash
-sudo bash run_exp2.sh
-```
-
-**What it does (automatically satisfies all assignment requirements):**
+**What it does:**
 1. Creates topology with hosts h1, h2, h3 and switches s1, s2 (OVSKernelSwitch)
-2. Executes `ovs-ofctl show s1` to check port state of switch s1 (saved to result2.txt)
-3. Executes `ovs-ofctl dump-flows s1` to show flow table (should be empty at this point, saved to result2.txt)
-4. Runs initial ping tests (before flow rules):
-   - from h1 to h3: `ping -c 1 h3` (saved to result2.txt)
-   - from h2 to h3: `ping -c 1 h3` (saved to result2.txt)
-5. Configures flow rules on s1 using `ovs-ofctl add-flow` (commands shown in result2.txt):
-   - Drops all flows from port s1-eth2: `ovs-ofctl add-flow s1 "in_port=2,actions=drop"`
-   - Forwards all flows from port s1-eth1 to s1-eth3: `ovs-ofctl add-flow s1 "in_port=1,actions=output:3"`
-6. Shows flow table after rules are added: `ovs-ofctl dump-flows s1` (saved to result2.txt)
-7. Runs final ping tests (after flow rules):
-   - from h1 to h3 (saved to result2.txt)
-   - from h2 to h3 (saved to result2.txt)
-8. Saves all results to `result2.txt`, including:
-   - `ovs-ofctl show s1` output (before)
-   - `ovs-ofctl dump-flows s1` output (before and after)
-   - Initial ping test results (from h1 to h3 and from h2 to h3)
-   - Flow rule commands used
-   - Final ping test results (from h1 to h3 and from h2 to h3)
-9. Opens Mininet CLI for manual testing (type `exit` to stop)
+2. Runs initial ping tests (before flow rules):
+   - from h1 to h3
+   - from h2 to h3
+3. Shows switch s1 port state and flow table using `ovs-ofctl show s1` and `ovs-ofctl dump-flows s1`
+4. Configures flow rules on s1:
+   - Drops all flows from port s1-eth2
+   - Forwards all flows from port s1-eth1 to s1-eth3
+5. Runs final ping tests (after flow rules):
+   - from h1 to h3
+6. Saves all results to `result2.txt`
+7. Opens Mininet CLI for manual testing (type `exit` to stop)
 
-**Manual testing:** The script automatically captures all required commands and outputs. However, if you want to run `ovs-ofctl` commands manually from **another terminal window** while the Mininet network is running (as mentioned in the assignment), you can do so. The script includes a pause option - set `HOLD=1` environment variable:
-```bash
-# Run with manual pause option
-HOLD=1 sudo python3 exp2.py
-
-# In another terminal (while exp2.py is paused), you can run:
-sudo ovs-ofctl -O OpenFlow13 show s1
-sudo ovs-ofctl -O OpenFlow13 dump-flows s1
-```
-
-**Note:** The script automatically populates `result2.txt` with all required test results, including all ping results and `ovs-ofctl` output as specified in the assignment.
+**Note:** The script will automatically populate `result2.txt` with all test results, including:
+- Initial ping test results
+- Switch port state and flow table information
+- Flow rule commands used
+- Final ping test results
 
 ---
 
@@ -154,7 +169,7 @@ sudo ovs-ofctl -O OpenFlow13 dump-flows s1
 
 1. **Run with sudo**: Both scripts require sudo privileges to create network namespaces and configure network interfaces.
 
-2. **Separate runs**: Experiments 1 and 2 are independent and do not share configurations.
+2. **Separate runs**: Experiments 1 and 2 do not share configurations. Each experiment is independent.
 
 3. **Result files**: The result files (`result1.txt` and `result2.txt`) are automatically generated when you run the scripts. You don't need to manually create them.
 
@@ -162,69 +177,24 @@ sudo ovs-ofctl -O OpenFlow13 dump-flows s1
    - Test additional commands manually
    - Type `exit` to stop the network and clean up
 
-5. **Network cleanup**: If a previous run didn't clean up properly, run:
-   ```bash
-   sudo mn -c
-   ```
+5. **Manual testing**: If you want to run `ovs-ofctl` commands manually for Experiment 2, you can do so from another terminal window while the Mininet network is running.
 
 ## Files
 
-- `exp1.py` - Experiment 1: IP Routing implementation (modular and well-organized with comments)
-- `exp2.py` - Experiment 2: SDN (L2) implementation with `ovs-ofctl` (modular and well-organized with comments)
-- `run_exp1.sh` - Shell script wrapper for Experiment 1
-- `run_exp2.sh` - Shell script wrapper for Experiment 2
+- `exp1.py` - Experiment 1: IP Routing implementation
+- `exp2.py` - Experiment 2: SDN (L2) implementation
 - `result1.txt` - Results from Experiment 1 (auto-generated)
-- `result2.txt` - Results from Experiment 2 (auto-generated, contains all required outputs)
-
-## Submission Requirements
-
-The following files must be submitted (as specified in the assignment):
-
-1. `exp1.py` - IP Routing experiment implementation
-2. `exp2.py` - SDN (L2) experiment implementation
-3. `result1.txt` - Ping test results from Experiment 1
-4. `result2.txt` - All test results from Experiment 2, including:
-   - Ping results from h1 to h3 and from h2 to h3
-   - `ovs-ofctl show s1` output
-   - `ovs-ofctl dump-flows s1` output (before and after)
-   - Flow rule commands used
-   - Ping results after flow rules are applied
-
-**Note:** The code is modular and well-organized with comments explaining logical steps (e.g., "add switches", "configure routes", etc.).
-
-## Changelog
-
-- **11/6**: IP addresses in Task 1 diagram were updated (r1 and h2 IP addresses). The current implementation in `exp1.py` uses the updated IP addresses.
+- `result2.txt` - Results from Experiment 2 (auto-generated)
 
 ## Troubleshooting
 
+- **`Cannot find required executable mnexec`**: This means the Python mininet package is installed, but the system binaries are missing. On macOS, use Docker (see Quick Start above) or a Linux VM. The `pip install mininet` command only installs the Python package, not the full Mininet system.
+
 - **Permission denied**: Make sure you're running with `sudo`
-  ```bash
-  sudo python3 exp1.py
-  ```
 
-- **Mininet not found / ModuleNotFoundError**: Ensure Mininet is properly installed:
-  ```bash
-  sudo apt install -y mininet
-  sudo mn --test pingall
-  ```
+- **Mininet not found / ModuleNotFoundError**: On macOS, use Docker or a Linux VM. Mininet requires Linux kernel features that aren't available on macOS.
 
-- **OVS commands fail**: Ensure Open vSwitch is installed:
-  ```bash
-  sudo apt install -y openvswitch-switch
-  ```
+- **OVS commands fail**: Ensure Open vSwitch is installed and running (included in Docker image)
 
-- **Network cleanup**: If a previous run didn't clean up properly:
-  ```bash
-  sudo mn -c
-  ```
+- **Network cleanup**: If a previous run didn't clean up properly, you may need to run `sudo mn -c` to clean up Mininet
 
-- **Cannot find required executable mnexec**: The `pip install mininet` command only installs the Python package, not the full Mininet system. Use `apt install mininet` instead:
-  ```bash
-  sudo apt install -y mininet
-  ```
-
-## Reference
-
-For more information on Mininet and OpenFlow tools, see:
-- [Mininet OpenFlow Tutorial](https://github.com/mininet/openflow-tutorial/wiki/Learn-Development-Tools)
