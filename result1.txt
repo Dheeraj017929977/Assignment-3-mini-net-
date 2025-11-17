@@ -1,0 +1,18 @@
+================================================================
+Experiment 1: IP Routing - Ping Test Results
+================================================================
+
+This file will be populated when you run: sudo python3 exp1.py
+
+The script will automatically:
+1. Create the network topology with hosts h1, h2, h3 and routers r1, r2
+2. Configure routing tables
+3. Run ping tests and save results here
+
+Expected ping tests:
+- from h1 to h3 (10.0.2.2)
+- from h2 to h3 (10.0.2.2)
+- from h3 to h1 (10.0.0.1)
+- from h3 to h2 (10.0.3.2)
+
+
