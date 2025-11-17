@@ -4,9 +4,28 @@ This repository contains two Mininet experiments for IP Routing and SDN (L2) con
 
 ## Quick Start
 
-**If you're getting `ModuleNotFoundError: No module named 'mininet'` or `Cannot find required executable mnexec`:**
+### Preferred: Native Linux / Ubuntu VM
 
-The `pip install mininet` command only installs the Python package, but Mininet also requires system binaries (like `mnexec`) that need Linux kernel features. On macOS, the easiest solution is to use **Docker**:
+1. Install Ubuntu (20.04/22.04) in VirtualBox/VMware or use a native Linux system.
+2. Install Mininet once:
+   ```bash
+   sudo apt update
+   sudo apt install -y git python3-pip
+   git clone https://github.com/mininet/mininet
+   cd mininet
+   sudo ./util/install.sh -a
+   ```
+3. Clone this repo and run the experiments:
+   ```bash
+   git clone <repo-url>
+   cd Assignment-3-mini-net-
+   sudo python3 exp1.py
+   sudo python3 exp2.py
+   ```
+
+### macOS-only note
+
+If you try to run Mininet directly on macOS you'll hit `ModuleNotFoundError: mininet`, `mnexec not found`, etc. The `pip install mininet` command only installs the Python helpers, not the kernel features. Use Docker or a Linux VM instead:
 
 ```bash
 # 1. Install Docker Desktop (if not already installed)
@@ -136,32 +155,33 @@ sudo python3 exp1.py
 
 ### Experiment 2: SDN (L2)
 
-This experiment creates a network topology with hosts and OpenFlow switches, configures flow rules using `ovs-ofctl`, and tests connectivity.
+This experiment builds the L2 topology (two OVS switches, three hosts), captures baseline OVS state, programs the specified OpenFlow rules, and records connectivity results.
 
-**To run:**
+**To run (default automated mode):**
 ```bash
 sudo python3 exp2.py
 ```
 
-**What it does:**
-1. Creates topology with hosts h1, h2, h3 and switches s1, s2 (OVSKernelSwitch)
-2. Runs initial ping tests (before flow rules):
-   - from h1 to h3
-   - from h2 to h3
-3. Shows switch s1 port state and flow table using `ovs-ofctl show s1` and `ovs-ofctl dump-flows s1`
-4. Configures flow rules on s1:
-   - Drops all flows from port s1-eth2
-   - Forwards all flows from port s1-eth1 to s1-eth3
-5. Runs final ping tests (after flow rules):
-   - from h1 to h3
-6. Saves all results to `result2.txt`
-7. Opens Mininet CLI for manual testing (type `exit` to stop)
+**Optional manual step (matches the assignment instructions):**
+```bash
+HOLD=1 sudo python3 exp2.py   # script pauses after the topology boots
+```
+When the prompt appears you can open another terminal and run:
+```bash
+sudo ovs-ofctl -O OpenFlow13 show s1
+sudo ovs-ofctl -O OpenFlow13 dump-flows s1
+sudo ovs-ofctl -O OpenFlow13 add-flow s1 "in_port=2,actions=drop"
+sudo ovs-ofctl -O OpenFlow13 add-flow s1 "in_port=1,actions=output:3"
+```
+Then press ENTER in the first terminal to let the script finish. The outputs (including the exact commands) are still written to `result2.txt`.
 
-**Note:** The script will automatically populate `result2.txt` with all test results, including:
-- Initial ping test results
-- Switch port state and flow table information
-- Flow rule commands used
-- Final ping test results
+**What gets recorded automatically:**
+- Baseline ovs-ofctl show/dump outputs (before flows)
+- Pings from h1→h3 and h2→h3 before installing flows
+- The exact add-flow commands
+- Flow table contents after inserting the rules
+- Pings from h1→h3 and h2→h3 after the rules are active
+- Any CLI commands you run manually (if you stay in the Mininet CLI)
 
 ---
 
